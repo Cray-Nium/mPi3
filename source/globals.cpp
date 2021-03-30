@@ -6,4 +6,7 @@
 
 #include "globals.h"
 
-extern clock_t timeMarks[10] = {0};
+string libraryDirectory = string("/home/pi/Music/mPi3_library/");
+unsigned int songNumber = 0;
+Playlist primaryPlaylist;
+clock_t timeMarks[10] = {0};

@@ -6,6 +6,9 @@
 
 #include <stdio.h>
 #include <iostream>
+#include <string>
+#include "AudioLibrary.h"
+#include "AudioTrack.h"
 #include <SFML/Window.hpp>
 #include <SFML/Graphics.hpp>
 #include <SFML/Graphics/Texture.hpp>
@@ -26,6 +29,9 @@ Vector2u windowSize;
 Vector2u windowOrigin = Vector2u(0,0);
 
 //Getting album art working
+#include "Album.h"
+extern vector<Album> albumLibrary;
+string albumArtFilePath;
 Texture albumArtTexture;
 Vector2u albumArtNativeSize;
 Sprite albumArtSprite;
@@ -35,6 +41,9 @@ float albumArtFrameSideLength;
 float albumArtTextureScaleFactor;
 Vector2f albumArtFrameOrigin;
 RectangleShape albumArtFrame;
+unsigned int localSongNumber;
+#include <ctime>
+clock_t t0, t1, t2, t3, t4, t5, t6;
 
 
 void* guiThreadRun(void* param){
@@ -42,22 +51,22 @@ void* guiThreadRun(void* param){
     windowSize = window.getSize();
     window.setFramerateLimit(60);
 
-    albumArtTexture.loadFromFile("/home/pi/Music/mPi3_library/Kings & Queens - LEAH/Artwork/CoverArt.jpg");
-    albumArtNativeSize = albumArtTexture.getSize();
-
     albumArtFrameSideLength = windowSize.x * (1 - 2 * albumArtFrameSideMarginPercent);
     albumArtFrameOrigin.x = windowSize.x * albumArtFrameSideMarginPercent;
     albumArtFrameOrigin.y = windowSize.y * albumArtFrameTopMarginPercent;
     albumArtFrame.setOrigin(albumArtFrameOrigin);
     albumArtFrame.setSize(Vector2f(albumArtFrameSideLength, albumArtFrameSideLength));
-    
+    albumArtSprite.setPosition(albumArtFrame.getOrigin());
+
+    albumArtFilePath = coreLibrary.tracks.at(primaryPlaylist.entries.at(songNumber).audioTrackKey).artFilePath;
+    albumArtTexture.loadFromFile(albumArtFilePath);
+    albumArtNativeSize = albumArtTexture.getSize();    
     albumArtTextureScaleFactor = ( albumArtNativeSize.x >= albumArtNativeSize.y 
                                   ? albumArtFrameSideLength / albumArtNativeSize.x
                                   : albumArtFrameSideLength / albumArtNativeSize.y);
+    albumArtTexture.setSmooth(false);
     
-    albumArtTexture.setSmooth(true);
     albumArtSprite.setTexture(albumArtTexture);
-    albumArtSprite.setPosition(albumArtFrame.getOrigin());
     albumArtSprite.setScale(albumArtTextureScaleFactor, albumArtTextureScaleFactor);
 
     
@@ -78,6 +87,7 @@ void* guiThreadRun(void* param){
                     cout << "Touch moved with finger: " << event.touch.finger << " and coordinates: " << event.touch.x << ", " << event.touch.y << endl;
                     break;
                 case sf::Event::TouchEnded:
+                    audioPlaybackMessages.push(COMMAND_NEXT_TRACK);
                     cout << "Touch ended with finger: " << event.touch.finger << " and coordinates: " << event.touch.x << ", " << event.touch.y << endl;
                     break;
             }
@@ -87,6 +97,24 @@ void* guiThreadRun(void* param){
             window.close();
         }
 
+        if(localSongNumber != songNumber)
+        {
+            cout << "Refreshing album art texture" << endl;
+            albumArtFilePath = coreLibrary.tracks.at(primaryPlaylist.entries.at(songNumber).audioTrackKey).artFilePath;
+            t1 = clock();
+            albumArtTexture.loadFromFile(albumArtFilePath);
+            t2 = clock();
+            albumArtNativeSize = albumArtTexture.getSize();
+            albumArtTextureScaleFactor = ( albumArtNativeSize.x >= albumArtNativeSize.y 
+                                          ? albumArtFrameSideLength / albumArtNativeSize.x
+                                          : albumArtFrameSideLength / albumArtNativeSize.y);
+            albumArtSprite.setTexture(albumArtTexture, true);
+            albumArtSprite.setScale(albumArtTextureScaleFactor, albumArtTextureScaleFactor);
+            cout << "Time to load texture: " << (t2 - t1) / (CLOCKS_PER_SEC / 1000) << " ms" << endl;
+            
+            localSongNumber = songNumber;
+        }
+        
         window.clear(Color::Black);
         window.draw(albumArtSprite);
         window.display();

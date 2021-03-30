@@ -36,7 +36,6 @@ bool audioThreadDone = false;
 
 AudioLibrary coreLibrary;
 vector<Album> albumLibrary;
-Playlist primaryPlaylist;
 
 mpg123_handle *currentTrack = NULL;
 int mp3DecoderStatus = MPG123_OK;
@@ -61,9 +60,6 @@ off_t framesPlayed;
 static bool paused = false;
 
 //Temporary data structures
-int songNumber = 0;
-string dir = string("/home/pi/Music/mPi3_library/");
-
 
 
 bool audioPlaybackInit();
@@ -85,19 +81,6 @@ void compilePrimaryPlaylist();
 
 void* audioThreadRun(void* param)
 {
-    clock_t t1, elapsed;
-
-    t1 = clock();
-    populateAlbumLibrary(dir, albumLibrary);
-    compilePrimaryPlaylist();
-    elapsed = clock() - t1;
-    cout << "Time to compile library and primary playlist: " << elapsed / (CLOCKS_PER_SEC / 1000) << " ms" << endl;
-    
-    cout << "Size of coreLibrary track list: " << coreLibrary.tracks.size() << endl;
-    cout << "First entry of coreLibrary: " << coreLibrary.tracks.at(0).filepath << endl;
-    cout << "Size of primaryPlaylist entries: " << primaryPlaylist.entries.size() << endl;
-    cout << "First entry of primaryPlaylist: " << coreLibrary.tracks.at(primaryPlaylist.entries.at(0).audioTrackKey).filepath << endl;
-    
     if (!loadMp3File(songNumber)){
         audioThreadDone = true;
         return NULL;
@@ -128,6 +111,7 @@ void* audioThreadRun(void* param)
 }
 
 bool audioPlaybackInit(){
+    clock_t t1, elapsed;
     if ( (mpg123_init() != MPG123_OK) || ( (currentTrack = mpg123_new(NULL, &mp3DecoderStatus)) == NULL) )
     {
         printf("Decoder init failed.\n");
@@ -144,6 +128,17 @@ bool audioPlaybackInit(){
         printf("Trouble with out123: %s\n", out123_strerror(audioOutput));
         return false;
     }
+    
+    t1 = clock();
+    populateAlbumLibrary(libraryDirectory, albumLibrary);
+    compilePrimaryPlaylist();
+    elapsed = clock() - t1;
+    cout << "Time to compile library and primary playlist: " << elapsed / (CLOCKS_PER_SEC / 1000) << " ms" << endl;
+    
+    cout << "Size of coreLibrary track list: " << coreLibrary.tracks.size() << endl;
+    cout << "First entry of coreLibrary: " << coreLibrary.tracks.at(0).filepath << endl;
+    cout << "Size of primaryPlaylist entries: " << primaryPlaylist.entries.size() << endl;
+    cout << "First entry of primaryPlaylist: " << coreLibrary.tracks.at(primaryPlaylist.entries.at(0).audioTrackKey).filepath << endl;
     
     return true;
 }

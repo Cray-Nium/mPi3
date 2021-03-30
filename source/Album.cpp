@@ -9,6 +9,7 @@
 
 //For debug purposes; remove when done
 #include <iostream>
+#include "AudioTrack.h"
 
 using namespace std;
 
@@ -137,6 +138,13 @@ bool Album::populateTracks()
                 if (audioLibraryInfo.second)
                 {
                     newDisc.trackKeys.push_back(audioLibraryInfo.first);
+                    coreLibrary.tracks[audioLibraryInfo.first].artFilePath = this->coverArtFilePath;
+                    coreLibrary.tracks[audioLibraryInfo.first].artist = this->artist;
+                    coreLibrary.tracks[audioLibraryInfo.first].title = fileNames[i];
+                }
+                else
+                {
+                    cout << "coreLibrary.addTrack returned false" << endl;
                 }
             }
             this->discs.push_back(newDisc);

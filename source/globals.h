@@ -14,10 +14,12 @@
 #ifndef GLOBALS_H
 #define GLOBALS_H
 
+#include <string>
 #include <queue>
 #include <map>
 #include <ctime>
 #include "AudioLibrary.h"
+#include "Playlist.h"
 
 using namespace std;
 
@@ -25,6 +27,10 @@ typedef unsigned char       uint8_t;
 typedef unsigned short      uint16_t;
 typedef unsigned int        uint32_t;
 typedef unsigned long long  uint64_t;
+
+extern string libraryDirectory;
+extern unsigned int songNumber;
+extern Playlist primaryPlaylist;
 
 extern bool mPi3ShuttingDown;
 extern bool audioThreadDone;
